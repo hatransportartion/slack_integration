@@ -1,0 +1,32 @@
+{
+  "name": "slack_integration",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hatransportartion/slack_integration.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/hatransportartion/slack_integration/issues"
+  },
+  "homepage": "https://github.com/hatransportartion/slack_integration#readme",
+  "dependencies": {
+    "@slack/web-api": "^7.10.0",
+    "airtable": "^0.12.2",
+    "body-parser": "^2.2.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
