@@ -4,6 +4,19 @@ const { createTruckChannel } = require("./modules/truckChannel");
 
 const router = express.Router();
 
+// 🔹 List all channels
+router.get("/list-channels", async (req, res) => {
+  try {
+    const channels = await slack.conversations.list({
+      types: "public_channel,private_channel"
+    });
+    res.json(channels.channels);
+  } catch (err) {
+    console.error("Error listing channels:", err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // 🔹 Create truck channel
 router.post("/create-channel", async (req, res) => {
   try {
@@ -28,17 +41,6 @@ router.post("/send-dispatch", async (req, res) => {
   }
 });
 
-// 🔹 List all channels
-router.get("/list-channels", async (req, res) => {
-  try {
-    const channels = await slack.conversations.list({
-      types: "public_channel,private_channel"
-    });
-    res.json(channels.channels);
-  } catch (err) {
-    console.error("Error listing channels:", err);
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
+
 
 module.exports = router;
