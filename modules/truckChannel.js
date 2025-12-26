@@ -35,4 +35,6 @@ async function createTruckChannel(truckName, driverSlackId, creatorSlackId) {
   return { channelId, channelName };
 }
 
+
+
 module.exports = { createTruckChannel };
