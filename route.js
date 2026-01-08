@@ -7,7 +7,7 @@ const handleMessage = require("./slackEvents/message");
 
 const router = express.Router();
 
-
+console.log("Router initialized");
 
 // 🔹 List all channels
 router.get("/list-channels", async (req, res) => {
@@ -89,34 +89,34 @@ router.post("/events", async (req, res) => {
   }
 
   try {
-    const event = req.body.event;
-    if(event.item.channel != "C0A36B63XM4"){
+    const currentEvent = req.body.event;
+    if(currentEvent.channel != "C0A36B63XM4"){
       console.log("Ignoring this event as channel is different");
       res.status(200).send("Channel ID mismatch");
       console.log("RRR");
     }
 
-    if (!event) return;
+    if (!currentEvent) return;
 
-    switch (event.type) {
+    switch (currentEvent.type) {
       case "reaction_added":
-        await handleReactionAdded(event);
+        await handleReactionAdded(currentEvent);
         break;
       
       case "file_shared":
-        await handleFileShared(event);
+        await handleFileShared(currentEvent);
         break;
 
       case "message":
         // Handle message events if needed
-        await handleMessage(event);
+        await handleMessage(currentEvent);
         break;
 
       default:
-        console.log("Unhandled Slack event:", event.type);
+        console.log("Unhandled Slack event:", currentEvent.type);
     }
   } catch (err) {
-    console.error("Slack event handler error:", err.message);
+    console.error("Slack event handler error:", err.message, "\n Event: ", JSON.stringify(req.body) );
   }
   res.sendStatus(200);
 });

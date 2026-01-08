@@ -8,10 +8,11 @@ const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
 async function handleReactionAdded(event) {
   if (event.reaction !== "+1") return;
 
-  const channel = event.item.channel;
-  const ts = event.item.ts;
-
   try {
+    if (event.reaction !== "+1") return;
+
+    const channel = event.item.channel;
+    const ts = event.item.ts;
     const response = await axios.get(
       "https://slack.com/api/conversations.history",
       {
