@@ -1,8 +1,13 @@
 const express = require("express");
 const slack = require("./config/slackClient");
 const { createTruckChannel } = require("./modules/truckChannel");
+const handleReactionAdded = require("./slackEvents/reactionAdded");
+const handleFileShared = require("./slackEvents/fileshared");
+const handleMessage = require("./slackEvents/message");
 
 const router = express.Router();
+
+
 
 // 🔹 List all channels
 router.get("/list-channels", async (req, res) => {
@@ -74,6 +79,46 @@ router.post("addRateCon", async (req, res) => {
     console.error("Error adding rate con:", err);
     res.status(500).json({ ok: false, error: err.message });
   }
+});
+
+router.post("/events", async (req, res) => {
+  // 1️⃣ URL verification
+  console.log("Received Slack event:", req.body);
+  if (req.body.type === "url_verification") {
+    return res.status(200).send(req.body.challenge);
+  }
+
+  try {
+    const event = req.body.event;
+    if(event.item.channel != "C0A36B63XM4"){
+      console.log("Ignoring this event as channel is different");
+      res.status(200).send("Channel ID mismatch");
+      console.log("RRR");
+    }
+
+    if (!event) return;
+
+    switch (event.type) {
+      case "reaction_added":
+        await handleReactionAdded(event);
+        break;
+      
+      case "file_shared":
+        await handleFileShared(event);
+        break;
+
+      case "message":
+        // Handle message events if needed
+        await handleMessage(event);
+        break;
+
+      default:
+        console.log("Unhandled Slack event:", event.type);
+    }
+  } catch (err) {
+    console.error("Slack event handler error:", err.message);
+  }
+  res.sendStatus(200);
 });
 
 
