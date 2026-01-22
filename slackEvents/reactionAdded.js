@@ -76,7 +76,7 @@ async function handleReactionAdded(event) {
 
     const fileName = generateUniqueFilename()+ extension;
     let outputFilePath = `/home/app/docs/${fileName}`;
-    const NODE_ENV = process.env.NODE_ENV || "local";
+    const NODE_ENV = process.env.NODE_ENV || "production";
     console.log("NODE_ENV: ", NODE_ENV);
     console.log("Output File Path: ", outputFilePath);
     if (NODE_ENV === "local") {
