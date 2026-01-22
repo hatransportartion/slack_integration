@@ -51,12 +51,30 @@ async function handleReactionAdded(event) {
       },
       responseType: "arraybuffer"
     });
+
+    console.log(" filetype: ", fileResponse.headers['content-type']);
+    console.log(" content-length: ", fileResponse.headers['content-length']);
+    //as file type is filetype:  application/pdf, add it the file name while saving
     
     // const fileBuffer = Buffer.from(fileResponse.data, "binary");
     // console.log("Downloaded file size (bytes):", fileBuffer.length);
 
+    const fileType = fileResponse.headers['content-type'];
+    let extension = '';
+    if (fileType === 'application/pdf') {
+      extension = '.pdf';
+    } else if (fileType === 'image/jpeg') {
+      extension = '.jpg';
+    } else if (fileType === 'image/png') {
+      extension = '.png';
+    }else{
+      extension = '';
+    }
 
-    const fileName = generateUniqueFilename();
+
+
+
+    const fileName = generateUniqueFilename()+ extension;
     let outputFilePath = `/home/app/docs/${fileName}`;
     const NODE_ENV = process.env.NODE_ENV || "local";
     console.log("NODE_ENV: ", NODE_ENV);
@@ -71,7 +89,7 @@ async function handleReactionAdded(event) {
 
 
     const URL = 'https://api.handatransportation.com/docs/' + fileName;
-    // const URL = "https://api.handatransportation.com/docs/63687ef7835c4b42b2c57ead3528824f.pdf";
+    // const URL = "https://api.handatransportation.com/docs/1c018ed627504cc183e0142cae94fcb2.pdf";
 
     const resp = await uploadFileToAirtable(URL, fileName);
     console.log("File uploaded to Airtable:", JSON.stringify(resp));
