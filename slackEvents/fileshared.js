@@ -1,11 +1,10 @@
-const axios = require("axios");
-const { uploadFileToAirtable } = require("../airtable");
+import axios from "axios";
+import { uploadFileToAirtable } from "../airtable.js";
 
 const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
 
 async function handleFileShared(event) {
-
-    console.log("Handling file_shared event", JSON.stringify(event));
+  console.log("Handling file_shared event", JSON.stringify(event));
 
   const channel = event.item.channel;
   const ts = event.item.ts;
@@ -15,15 +14,15 @@ async function handleFileShared(event) {
       "https://slack.com/api/conversations.history",
       {
         headers: {
-          Authorization: `Bearer ${SLACK_BOT_TOKEN}`
+          Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
         },
         params: {
           channel,
           latest: ts,
           inclusive: true,
-          limit: 1
-        }
-      }
+          limit: 1,
+        },
+      },
     );
 
     const message = response.data.messages?.[0];
@@ -39,12 +38,11 @@ async function handleFileShared(event) {
       name: file.name,
       type: file.filetype,
       url: file.url_private_download,
-      approvedBy: event.user
+      approvedBy: event.user,
     });
-
   } catch (err) {
     console.error("Reaction handler error:", err.message);
   }
 }
 
-module.exports = handleFileShared;
+export default handleFileShared;

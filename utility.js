@@ -1,8 +1,5 @@
-const uuidv4 = require("uuid").v4;
+import { v4 as uuidv4 } from "uuid";
 
-function generateUniqueFilename() {
-  const uniqueId = uuidv4().replace(/-/g, ""); // Remove all hyphens
-  return `${uniqueId}`;
+export function generateUniqueFilename() {
+  return uuidv4().replace(/-/g, "");
 }
-
-module.exports = { generateUniqueFilename };

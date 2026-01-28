@@ -1,27 +1,43 @@
 // airtable.js
-const Airtable = require("airtable");
-const dotenv = require("dotenv");
+import Airtable from "airtable";
+// import dotenv from "dotenv";
 
-const envFile =
-  process.env.NODE_ENV === "production" ? ".env.prod" : ".env.local";
-dotenv.config({ path: envFile });
+// let NODE_ENV = process.env.NODE_ENV || "production";
 
-const base = new Airtable({  apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
+// if (NODE_ENV == "local") {
+//   dotenv.config({ path: ".env.local" });
+// } else if (NODE_ENV == "production") {
+//   dotenv.config({ path: ".env.prod" });
+// } else {
+//   dotenv.config();
+// }
 
+if (!process.env.AIRTABLE_API_KEY) {
+  throw new Error("❌ AIRTABLE_API_KEY is missing");
+}
+if (!process.env.AIRTABLE_BASE_ID) {
+  throw new Error("❌ AIRTABLE_BASE_ID is missing");
+}
+if (!process.env.AIRTABLE_DISPATCH_TABLE_ID) {
+  throw new Error("❌ AIRTABLE_DISPATCH_TABLE_ID is missing");
+}
 
+const base = new Airtable({
+  apiKey: process.env.AIRTABLE_API_KEY,
+}).base(process.env.AIRTABLE_BASE_ID);
 
-
-async function uploadFileToAirtable(fileUrl, fileName) {
+export async function uploadFileToAirtable(fileUrl, fileName) {
   try {
-    console.log("⬇️ Downloading file from Slack:", fileUrl);
-    const record = base(process.env.AIRTABLE_DISPATCH_TABLE_ID).create({
-      "Load Status": "Load Template", // Single select
+    console.log("⬆️ Uploading file to Airtable:", fileName);
+
+    const record = await base(process.env.AIRTABLE_DISPATCH_TABLE_ID).create({
+      "Load Status": "Load Template",
       "Carrier Rate Sheet": [
         {
           url: fileUrl,
-          filename: fileName
-        }
-      ]
+          filename: fileName,
+        },
+      ],
     });
 
     console.log("✅ Airtable record created:", record.id);
@@ -29,10 +45,8 @@ async function uploadFileToAirtable(fileUrl, fileName) {
   } catch (error) {
     console.error(
       "❌ Airtable create failed:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error;
   }
 }
-
-module.exports = { uploadFileToAirtable };

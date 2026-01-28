@@ -1,11 +1,11 @@
-const express = require("express");
-const slack = require("./config/slackClient");
-const { createTruckChannel } = require("./modules/truckChannel");
-const handleReactionAdded = require("./slackEvents/reactionAdded");
-const handleFileShared = require("./slackEvents/fileshared");
-const handleMessage = require("./slackEvents/message");
+import { Router } from "express";
+import slack from "./config/slackClient.js";
+import { createTruckChannel } from "./modules/truckChannel.js";
+import handleReactionAdded from "./slackEvents/reactionAdded.js";
+import handleFileShared from "./slackEvents/fileshared.js";
+import handleMessage from "./slackEvents/message.js";
 
-const router = express.Router();
+const router = Router();
 
 console.log("Router initialized");
 
@@ -13,7 +13,7 @@ console.log("Router initialized");
 router.get("/list-channels", async (req, res) => {
   try {
     const channels = await slack.conversations.list({
-      types: "public_channel,private_channel"
+      types: "public_channel,private_channel",
     });
     res.json(channels.channels);
   } catch (err) {
@@ -26,7 +26,11 @@ router.get("/list-channels", async (req, res) => {
 router.post("/create-channel", async (req, res) => {
   try {
     const { truckName, driverSlackId, creatorSlackId } = req.body;
-    const channel = await createTruckChannel(truckName, driverSlackId, creatorSlackId);
+    const channel = await createTruckChannel(
+      truckName,
+      driverSlackId,
+      creatorSlackId,
+    );
     res.json({ ok: true, ...channel });
   } catch (err) {
     console.error("Error creating channel:", err);
@@ -43,7 +47,7 @@ router.post("/send-dispatch", async (req, res) => {
 
     await slack.chat.postMessage({
       channel,
-      text
+      text,
     });
 
     res.json({ ok: true });
@@ -52,7 +56,6 @@ router.post("/send-dispatch", async (req, res) => {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
-
 
 //Not working now, need to fix later
 // router.get("/deleteChannel", async (req, res) => {
@@ -90,10 +93,14 @@ router.post("/events", async (req, res) => {
 
   try {
     const currentEvent = req.body.event;
-    if(currentEvent.channel != "C0A36B63XM4"){
-      console.log("Ignoring this event as channel is different");
+    if (currentEvent.item.channel != "C0A36B63XM4") {
+      console.log(
+        "Ignoring this event as channel is different",
+        currentEvent.channel,
+      );
       res.status(200).send("Channel ID mismatch");
-      console.log("RRR");
+      //console.log("RRR");
+      return;
     }
 
     if (!currentEvent) return;
@@ -102,7 +109,7 @@ router.post("/events", async (req, res) => {
       case "reaction_added":
         await handleReactionAdded(currentEvent);
         break;
-      
+
       case "file_shared":
         await handleFileShared(currentEvent);
         break;
@@ -116,10 +123,14 @@ router.post("/events", async (req, res) => {
         console.log("Unhandled Slack event:", currentEvent.type);
     }
   } catch (err) {
-    console.error("Slack event handler error:", err.message, "\n Event: ", JSON.stringify(req.body) );
+    console.error(
+      "Slack event handler error:",
+      err.message,
+      "\n Event: ",
+      JSON.stringify(req.body),
+    );
   }
   res.sendStatus(200);
 });
 
-
-module.exports = router;
+export default router;

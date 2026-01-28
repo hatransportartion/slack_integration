@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index.js",
+    "dev": "NODE_ENV=local nodemon index.js",
     "start": "node index.js"
   },
   "repository": {
@@ -14,17 +14,17 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/hatransportartion/slack_integration/issues"
   },
   "homepage": "https://github.com/hatransportartion/slack_integration#readme",
   "dependencies": {
-    "@slack/web-api": "^7.10.0",
+    "@slack/web-api": "^7.13.0",
     "airtable": "^0.12.2",
     "axios": "^1.13.2",
     "body-parser": "^2.2.0",
-    "dotenv": "^17.2.1",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "uuid": "^13.0.0"
   },

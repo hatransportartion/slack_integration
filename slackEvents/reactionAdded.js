@@ -1,106 +1,99 @@
-const axios = require("axios");
-const { uploadFileToAirtable } = require("../airtable");
-const { generateUniqueFilename } = require("../utility");
-const fs = require("fs");
+import axios from "axios";
+import { writeFile } from "fs/promises";
+import { uploadFileToAirtable } from "../airtable.js";
+import { generateUniqueFilename } from "../utility.js";
 
 const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
+const SLACK_API_BASE = "https://slack.com/api";
+
+const EXTENSION_MAP = {
+  "application/pdf": ".pdf",
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+};
+
+// ✅ Only process these channels
+const CHANNEL_WHITELIST = [
+  "C0A36B63XM4", // replace with your actual channel IDs
+  "C0A36B63XM4",
+  "C0A36B63XM4",
+];
+
+const REACTION_WHITELIST = ["+1", "white_check_mark"];
 
 async function handleReactionAdded(event) {
-  if (event.reaction !== "+1") return;
+  if (!REACTION_WHITELIST.includes(event.reaction)) {
+    console.log(`🔹 Ignoring reaction ${event.reaction}`);
+    return;
+  }
+
+  const { channel } = event.item;
+
+  // ✅ Skip channels not in whitelist
+  if (!CHANNEL_WHITELIST.includes(channel)) {
+    console.log(`🔹 Ignoring reaction in channel ${channel}`);
+    return;
+  }
 
   try {
-    if (event.reaction !== "+1") return;
+    const { ts } = event.item;
 
-    const channel = event.item.channel;
-    const ts = event.item.ts;
-    const response = await axios.get(
-      "https://slack.com/api/conversations.history",
+    /* ------------------ Fetch message ------------------ */
+    const { data } = await axios.get(
+      `${SLACK_API_BASE}/conversations.history`,
       {
-        headers: {
-          Authorization: `Bearer ${SLACK_BOT_TOKEN}`
-        },
+        headers: { Authorization: `Bearer ${SLACK_BOT_TOKEN}` },
         params: {
           channel,
           latest: ts,
           inclusive: true,
-          limit: 1
-        }
-      }
+          limit: 1,
+        },
+        timeout: 2500, // prevents Slack retries
+      },
     );
 
-    const message = response.data.messages?.[0];
+    const message = data.messages?.[0];
+    const file = message?.files?.[0];
 
-    if (!message?.files?.length) {
+    if (!file) {
       console.log("👍 reaction but no file attached");
       return;
     }
 
-    const file = message.files[0];
-
-    console.log("👍 File 1 approved:", {
+    console.log("👍 File approved:", {
       name: file.name,
       type: file.filetype,
-      url: file.url_private_download,
-      approvedBy: event.user
+      approvedBy: event.user,
     });
 
-    //download file to local folder
+    /* ------------------ Download file ------------------ */
     const fileResponse = await axios.get(file.url_private_download, {
-      headers: {
-        Authorization: `Bearer ${SLACK_BOT_TOKEN}`
-      },
-      responseType: "arraybuffer"
+      headers: { Authorization: `Bearer ${SLACK_BOT_TOKEN}` },
+      responseType: "arraybuffer",
+      timeout: 2500,
     });
 
-    console.log(" filetype: ", fileResponse.headers['content-type']);
-    console.log(" content-length: ", fileResponse.headers['content-length']);
-    //as file type is filetype:  application/pdf, add it the file name while saving
-    
-    // const fileBuffer = Buffer.from(fileResponse.data, "binary");
-    // console.log("Downloaded file size (bytes):", fileBuffer.length);
+    const contentType = fileResponse.headers["content-type"];
+    const extension = EXTENSION_MAP[contentType] ?? "";
 
-    const fileType = fileResponse.headers['content-type'];
-    let extension = '';
-    if (fileType === 'application/pdf') {
-      extension = '.pdf';
-    } else if (fileType === 'image/jpeg') {
-      extension = '.jpg';
-    } else if (fileType === 'image/png') {
-      extension = '.png';
-    }else{
-      extension = '';
-    }
+    const fileName = `${generateUniqueFilename()}${extension}`;
+    const outputDir =
+      process.env.NODE_ENV === "local" ? "docs" : "/home/app/docs";
 
+    const outputFilePath = `${outputDir}/${fileName}`;
+    await writeFile(outputFilePath, Buffer.from(fileResponse.data));
 
+    console.log("📁 File saved:", outputFilePath);
 
+    /* ------------------ Upload to Airtable ------------------ */
+    const publicURL = `https://api.handatransportation.com/docs/${fileName}`;
+    await uploadFileToAirtable(publicURL, fileName);
 
-    const fileName = generateUniqueFilename()+ extension;
-    let outputFilePath = `/home/app/docs/${fileName}`;
-    const NODE_ENV = process.env.NODE_ENV || "production";
-    console.log("NODE_ENV: ", NODE_ENV);
-    console.log("Output File Path: ", outputFilePath);
-    if (NODE_ENV === "local") {
-      outputFilePath = `docs/${fileName}`;
-    }
-    console.log("Output File Path: ", outputFilePath);
-    const fileBuffer = Buffer.from(fileResponse.data, "binary");
-    fs.writeFileSync(outputFilePath, fileBuffer);
-    console.log("File saved to:", outputFilePath);
-
-
-    const URL = 'https://api.handatransportation.com/docs/' + fileName;
-    // const URL = "https://api.handatransportation.com/docs/1c018ed627504cc183e0142cae94fcb2.pdf";
-
-    const resp = await uploadFileToAirtable(URL, fileName);
-    console.log("File uploaded to Airtable:", JSON.stringify(resp));
-
-    // 🔥 YOUR BUSINESS LOGIC HERE
-    // - Download file
-    // - Upload to Airtable / S3
-    // - Trigger Make / webhook
+    console.log("✅ File uploaded to Airtable:", fileName);
   } catch (err) {
-    console.error("Reaction handler error:", err.message);
+    console.error("❌ Reaction handler error:", err);
   }
 }
 
-module.exports = handleReactionAdded;
+export default handleReactionAdded;

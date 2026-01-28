@@ -1,17 +1,23 @@
-const slack = require("../config/slackClient");
+import slack from "../config/slackClient.js";
 
-async function createTruckChannel(truckName, driverSlackId, creatorSlackId) {
+export async function createTruckChannel(
+  truckName,
+  driverSlackId,
+  creatorSlackId,
+) {
   // Slack-safe channel name
-  let channelName = "truck-" + truckName
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+  let channelName =
+    "truck-" +
+    truckName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
 
   // 1. Create private channel
   const channelRes = await slack.conversations.create({
     name: channelName,
-    is_private: true
+    is_private: true,
   });
 
   if (!channelRes.ok) throw new Error(channelRes.error);
@@ -28,13 +34,11 @@ async function createTruckChannel(truckName, driverSlackId, creatorSlackId) {
   if (usersToInvite.length > 0) {
     await slack.conversations.invite({
       channel: channelId,
-      users: usersToInvite.join(",")
+      users: usersToInvite.join(","),
     });
   }
 
   return { channelId, channelName };
 }
 
-
-
-module.exports = { createTruckChannel };
+export default createTruckChannel;

@@ -1,11 +1,22 @@
-const { WebClient } = require("@slack/web-api");
-require("dotenv").config();
+import { WebClient } from "@slack/web-api";
+// import dotenv from "dotenv";
+
+// let NODE_ENV = process.env.NODE_ENV || "production";
+
+// if (NODE_ENV == "local") {
+//   dotenv.config({ path: ".env.local" });
+// } else if (NODE_ENV == "production") {
+//   dotenv.config({ path: ".env.prod" });
+// } else {
+//   dotenv.config();
+// }
 
 const botToken = process.env.SLACK_BOT_TOKEN;
+
 if (!botToken) {
-  throw new Error("SLACK_BOT_TOKEN is not defined in environment variables");
+  throw new Error("❌ SLACK_BOT_TOKEN is not defined");
 }
-console.log("Initializing Slack Client with token:", botToken);
+
 const slack = new WebClient(botToken);
 
-module.exports = slack;
+export default slack;
