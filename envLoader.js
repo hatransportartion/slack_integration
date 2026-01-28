@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 
 /* -------------------- Determine NODE_ENV -------------------- */
-const NODE_ENV = process.env.NODE_ENV || "local";
+const NODE_ENV = process.env.NODE_ENV || "production";
 
 /* -------------------- Pick dotenv file -------------------- */
 const envFile = NODE_ENV === "production" ? ".env.prod" : ".env.local";
