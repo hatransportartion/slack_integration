@@ -93,15 +93,6 @@ router.post("/events", async (req, res) => {
 
   try {
     const currentEvent = req.body.event;
-    if (currentEvent.item.channel != "C0A36B63XM4") {
-      console.log(
-        "Ignoring this event as channel is different",
-        currentEvent.channel,
-      );
-      res.status(200).send("Channel ID mismatch");
-      //console.log("RRR");
-      return;
-    }
 
     if (!currentEvent) return;
 

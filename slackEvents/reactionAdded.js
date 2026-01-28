@@ -13,13 +13,13 @@ const EXTENSION_MAP = {
 };
 
 // ✅ Only process these channels
-const CHANNEL_WHITELIST = [
-  "C0A36B63XM4", // replace with your actual channel IDs
-  "C0A36B63XM4",
+// Load environment variables first
+
+const REACTION_WHITELIST = process.env.REACTION_WHITELIST?.split(",") || ["+1"];
+
+const CHANNEL_WHITELIST = process.env.CHANNEL_WHITELIST?.split(",") || [
   "C0A36B63XM4",
 ];
-
-const REACTION_WHITELIST = ["+1", "white_check_mark"];
 
 async function handleReactionAdded(event) {
   if (!REACTION_WHITELIST.includes(event.reaction)) {
