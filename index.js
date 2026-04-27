@@ -6,6 +6,7 @@ import logger from "./middlewares/logger.js";
 import errorHandler from "./middlewares/errorHandler.js";
 
 import { NODE_ENV } from "./envLoader.js";
+import path from "path";
 
 /* -------------------- APP SETUP -------------------- */
 const app = express();
@@ -14,6 +15,13 @@ const PORT = process.env.PORT || 3000;
 /* -------------------- Middlewares -------------------- */
 app.use(express.json({ limit: "1mb" })); // ⬅️ no body-parser needed
 app.use(logger);
+
+const docsPath =
+  process.env.NODE_ENV === "local"
+    ? path.resolve("docs")
+    : "/home/app/docs";
+
+app.use("/docs", express.static(docsPath));
 
 /* ---------------------- Routes ----------------------- */
 app.use("/slack", route);

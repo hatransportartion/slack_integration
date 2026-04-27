@@ -1,5 +1,9 @@
 // airtable.js
 import Airtable from "airtable";
+
+// POST https://content.airtable.com/v0/{baseId}/{recordId}/{fieldIdOrName}/uploadAttachment
+import axios from "axios";
+import { readFile } from "fs/promises";
 // import dotenv from "dotenv";
 
 // let NODE_ENV = process.env.NODE_ENV || "production";
@@ -49,4 +53,29 @@ export async function uploadFileToAirtable(fileUrl, fileName) {
     );
     throw error;
   }
+}
+
+
+export async function attachFileToAirtableRecord(recordId, fieldName, filePath, contentType, filename) {
+  const fileBuffer = await readFile(filePath);
+  const base64 = fileBuffer.toString("base64");
+
+  const url = `https://content.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${recordId}/${encodeURIComponent(fieldName)}/uploadAttachment`;
+
+  const { data } = await axios.post(
+    url,
+    {
+      contentType,
+      file: base64,
+      filename,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.AIRTABLE_PAT}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return data;
 }

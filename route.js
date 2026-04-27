@@ -2,7 +2,6 @@ import { Router } from "express";
 import slack from "./config/slackClient.js";
 import { createTruckChannel } from "./modules/truckChannel.js";
 import handleReactionAdded from "./slackEvents/reactionAdded.js";
-import handleFileShared from "./slackEvents/fileshared.js";
 import handleMessage from "./slackEvents/message.js";
 
 const router = Router();
@@ -85,43 +84,30 @@ router.post("addRateCon", async (req, res) => {
 });
 
 router.post("/events", async (req, res) => {
-  // 1️⃣ URL verification
-  console.log("Received Slack event:", req.body);
   if (req.body.type === "url_verification") {
     return res.status(200).send(req.body.challenge);
   }
 
+  // Ack first — Slack retries anything that takes >3s
+  res.sendStatus(200);
+
+  const currentEvent = req.body.event;
+  if (!currentEvent) return;
+
   try {
-    const currentEvent = req.body.event;
-
-    if (!currentEvent) return;
-
     switch (currentEvent.type) {
       case "reaction_added":
         await handleReactionAdded(currentEvent);
         break;
-
-      case "file_shared":
-        await handleFileShared(currentEvent);
-        break;
-
       case "message":
-        // Handle message events if needed
         await handleMessage(currentEvent);
         break;
-
       default:
         console.log("Unhandled Slack event:", currentEvent.type);
     }
   } catch (err) {
-    console.error(
-      "Slack event handler error:",
-      err.message,
-      "\n Event: ",
-      JSON.stringify(req.body),
-    );
+    console.error("Slack event handler error:", err.message);
   }
-  res.sendStatus(200);
 });
 
 export default router;

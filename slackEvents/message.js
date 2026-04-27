@@ -1,15 +1,26 @@
-import axios from "axios";
-import { uploadFileToAirtable } from "../airtable.js";
+import { processSlackFile } from "./processSlackFile.js";
 
-const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
+const CHANNEL_WHITELIST = process.env.CHANNEL_WHITELIST?.split(",") || [
+  "C0A36B63XM4",
+];
 
 async function handleMessage(event) {
-  console.log("Handling message event", JSON.stringify(event));
+  if (event.subtype !== "file_share") return;
+  if (event.bot_id) return;
+  if (!CHANNEL_WHITELIST.includes(event.channel)) {
+    console.log(`🔹 Ignoring file upload in channel ${event.channel}`);
+    return;
+  }
+  if (!event.files?.length) return;
 
-  const channel = event.channel;
-  const ts = event.ts;
-
-  return { success: true };
+  for (const file of event.files) {
+    await processSlackFile(file, {
+      source: "upload",
+      userId: event.user,
+      channel: event.channel,
+      ts: event.ts,
+    });
+  }
 }
 
 export default handleMessage;

@@ -4,3 +4,6 @@ node_modules
 .env.prod
 .DS_Store
 package-lock.json
+
+docs/*
+!docs/.gitkeep
